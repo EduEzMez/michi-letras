@@ -1,0 +1,1306 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
+  <title>Michi Letras · Aprendo con Gatitos</title>
+
+  <!-- Tipografías redondeadas, amables para primer ciclo -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet" />
+
+  <style>
+    /* =========================================================
+       MICHI LETRAS — Juego educativo de lectoescritura
+       Paleta: beige · crema · celeste pastel · durazno · amarillo · marrón claro
+       ========================================================= */
+    :root {
+      /* Paleta noble y suave */
+      --crema:        #FBF6EC;
+      --beige:        #F2E7D2;
+      --durazno:      #FBD2B5;
+      --celeste:      #CFE6EE;
+      --amarillo:     #FFE7A1;
+      --rosa:         #F8C6C8;
+      --marron-claro: #B98A65;
+      --marron:       #6E4A2C;
+      --tinta:        #3A2A1E;
+      --verde:        #B8D8A8;
+
+      /* Tamaños */
+      --radio:        22px;
+      --radio-lg:     32px;
+      --sombra:       0 8px 0 rgba(110, 74, 44, .08), 0 18px 40px -18px rgba(110, 74, 44, .25);
+      --sombra-btn:   0 6px 0 var(--marron-claro);
+    }
+
+    /* Cursor de patita gatuna (SVG embebido). Se aplica a todo el documento. */
+    html, body {
+      cursor: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='40' height='40' viewBox='0 0 40 40'><g fill='%23B98A65'><ellipse cx='20' cy='25' rx='8' ry='7'/><circle cx='10' cy='15' r='4'/><circle cx='30' cy='15' r='4'/><circle cx='14' cy='8' r='3.2'/><circle cx='26' cy='8' r='3.2'/></g><g fill='%23F2E7D2'><ellipse cx='20' cy='25' rx='4' ry='3.5'/><circle cx='10' cy='15' r='1.8'/><circle cx='30' cy='15' r='1.8'/><circle cx='14' cy='8' r='1.4'/><circle cx='26' cy='8' r='1.4'/></g></svg>") 12 14, auto;
+    }
+    /* Cursor con patita "presionando" sobre elementos clicables */
+    button, .letra, .ranura, [data-clickable] {
+      cursor: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='40' height='40' viewBox='0 0 40 40'><g fill='%23D69672'><ellipse cx='20' cy='27' rx='9' ry='7.5'/><circle cx='10' cy='17' r='4.2'/><circle cx='30' cy='17' r='4.2'/><circle cx='14' cy='10' r='3.4'/><circle cx='26' cy='10' r='3.4'/></g><g fill='%23FBF6EC'><ellipse cx='20' cy='27' rx='4.5' ry='3.8'/><circle cx='10' cy='17' r='1.9'/><circle cx='30' cy='17' r='1.9'/><circle cx='14' cy='10' r='1.5'/><circle cx='26' cy='10' r='1.5'/></g></svg>") 12 14, pointer;
+    }
+
+    * { box-sizing: border-box; }
+
+    html, body {
+      margin: 0;
+      padding: 0;
+      min-height: 100%;
+      font-family: 'Nunito', system-ui, sans-serif;
+      color: var(--tinta);
+      background: var(--crema);
+      -webkit-font-smoothing: antialiased;
+      overflow-x: hidden;
+    }
+
+    /* Fondo decorativo de huellitas suaves */
+    body::before {
+      content: "";
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      z-index: 0;
+      background-image:
+        radial-gradient(circle at 12% 20%, rgba(185, 138, 101, .06) 0 8px, transparent 9px),
+        radial-gradient(circle at 80% 12%, rgba(185, 138, 101, .05) 0 6px, transparent 7px),
+        radial-gradient(circle at 70% 75%, rgba(185, 138, 101, .05) 0 9px, transparent 10px),
+        radial-gradient(circle at 25% 85%, rgba(185, 138, 101, .06) 0 7px, transparent 8px);
+      background-size: 480px 480px;
+    }
+
+    h1, h2, h3, .titulo { font-family: 'Fredoka', 'Nunito', sans-serif; font-weight: 600; letter-spacing: -.5px; }
+
+    /* Layout principal — el juego ocupa el viewport y se centra */
+    .app {
+      position: relative;
+      z-index: 1;
+      min-height: 100vh;
+      min-height: 100dvh;
+      display: grid;
+      place-items: center;
+      padding: 24px 18px;
+    }
+
+    .pantalla {
+      width: min(1040px, 100%);
+      display: none;
+    }
+    .pantalla.activa { display: block; }
+
+    /* ========== PANTALLA DE INICIO ========== */
+    .inicio {
+      text-align: center;
+      padding: clamp(24px, 5vw, 48px);
+    }
+    .inicio h1 {
+      font-size: clamp(48px, 9vw, 96px);
+      margin: 0 0 6px;
+      color: var(--marron);
+      line-height: .95;
+    }
+    .inicio .subtitulo {
+      font-size: clamp(18px, 2.4vw, 24px);
+      color: var(--marron-claro);
+      margin: 0 0 28px;
+      font-weight: 600;
+    }
+    .inicio .gatito-grande {
+      width: clamp(180px, 32vw, 280px);
+      margin: 0 auto 24px;
+      display: block;
+      animation: respirar 4s ease-in-out infinite;
+    }
+    @keyframes respirar {
+      0%, 100% { transform: translateY(0) scale(1); }
+      50%      { transform: translateY(-6px) scale(1.02); }
+    }
+
+    /* Botón principal */
+    .btn-principal {
+      display: inline-flex;
+      align-items: center;
+      gap: 12px;
+      padding: 22px 44px;
+      font-family: 'Fredoka', sans-serif;
+      font-size: clamp(22px, 3vw, 30px);
+      font-weight: 600;
+      color: white;
+      background: var(--marron-claro);
+      border: none;
+      border-radius: 999px;
+      box-shadow: var(--sombra-btn);
+      transition: transform .12s ease, box-shadow .12s ease, background .2s;
+    }
+    .btn-principal:hover { background: #C99878; transform: translateY(-2px); box-shadow: 0 8px 0 var(--marron-claro); }
+    .btn-principal:active { transform: translateY(4px); box-shadow: 0 2px 0 var(--marron-claro); }
+
+    .opciones-inicio {
+      margin-top: 28px;
+      display: flex;
+      justify-content: center;
+      gap: 14px;
+      flex-wrap: wrap;
+    }
+    .chip {
+      background: white;
+      border: 3px solid var(--beige);
+      border-radius: 999px;
+      padding: 10px 18px;
+      font-family: 'Nunito', sans-serif;
+      font-weight: 700;
+      font-size: 15px;
+      color: var(--marron);
+      transition: all .15s;
+    }
+    .chip.activo { background: var(--amarillo); border-color: var(--amarillo); }
+    .chip:hover { transform: translateY(-2px); }
+
+    /* ========== PANTALLA DE JUEGO ========== */
+    .juego {
+      background: white;
+      border-radius: var(--radio-lg);
+      box-shadow: var(--sombra);
+      padding: clamp(18px, 3vw, 32px);
+      display: grid;
+      grid-template-rows: auto 1fr auto;
+      gap: 18px;
+      min-height: 540px;
+    }
+
+    /* Encabezado: progreso + botones */
+    .header-juego {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+    .marca {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-family: 'Fredoka', sans-serif;
+      font-size: 22px;
+      color: var(--marron);
+    }
+    .marca svg { width: 38px; height: 38px; }
+    .progreso {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      background: var(--beige);
+      padding: 10px 18px 10px 14px;
+      border-radius: 999px;
+    }
+    .progreso .pata { width: 28px; height: 28px; }
+    .progreso .num {
+      font-family: 'Fredoka', sans-serif;
+      font-size: 22px;
+      font-weight: 600;
+      color: var(--marron);
+      min-width: 24px;
+      text-align: left;
+    }
+    .header-acciones { display: flex; gap: 8px; }
+    .btn-icono {
+      width: 46px;
+      height: 46px;
+      border: none;
+      border-radius: 50%;
+      background: var(--beige);
+      display: grid;
+      place-items: center;
+      transition: transform .12s, background .2s;
+    }
+    .btn-icono:hover { background: var(--durazno); transform: rotate(-8deg); }
+    .btn-icono.off { opacity: .45; }
+    .btn-icono svg { width: 22px; height: 22px; color: var(--marron); }
+
+    /* Área central: imagen + ranuras + letras */
+    .area-juego {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) minmax(0, 1.2fr);
+      gap: clamp(16px, 3vw, 32px);
+      align-items: center;
+    }
+    @media (max-width: 720px) {
+      .area-juego { grid-template-columns: 1fr; }
+    }
+
+    /* Tarjeta de imagen con gatito espectador */
+    .tarjeta-imagen {
+      position: relative;
+      background: linear-gradient(180deg, var(--celeste), #E6F1F5);
+      border-radius: var(--radio-lg);
+      aspect-ratio: 1 / 1;
+      max-width: 360px;
+      margin: 0 auto;
+      width: 100%;
+      display: grid;
+      place-items: center;
+      box-shadow: inset 0 -10px 0 rgba(110, 74, 44, .06);
+      overflow: hidden;
+    }
+    .tarjeta-imagen .ilustracion {
+      width: 70%;
+      height: 70%;
+      animation: flotar 4.5s ease-in-out infinite;
+    }
+    @keyframes flotar {
+      0%, 100% { transform: translateY(0); }
+      50%      { transform: translateY(-8px); }
+    }
+    .tarjeta-imagen .gatito-mirando {
+      position: absolute;
+      bottom: 8px;
+      right: 10px;
+      width: 90px;
+    }
+    .palabra-pista {
+      position: absolute;
+      top: 14px;
+      left: 18px;
+      font-family: 'Fredoka', sans-serif;
+      font-size: 18px;
+      color: var(--marron);
+      background: rgba(255, 255, 255, .7);
+      padding: 4px 14px;
+      border-radius: 999px;
+      backdrop-filter: blur(4px);
+    }
+
+    /* Lado derecho: instrucción + ranuras + pool de letras */
+    .panel-letras { display: flex; flex-direction: column; gap: 22px; }
+    .instruccion {
+      font-family: 'Fredoka', sans-serif;
+      font-size: clamp(22px, 3.2vw, 30px);
+      color: var(--marron);
+      margin: 0;
+      line-height: 1.2;
+    }
+    .instruccion .palabra { color: var(--marron-claro); }
+
+    /* Ranuras donde se forma la palabra */
+    .ranuras {
+      display: flex;
+      gap: 10px;
+      justify-content: center;
+      flex-wrap: wrap;
+    }
+    .ranura {
+      width: clamp(54px, 11vw, 76px);
+      height: clamp(64px, 13vw, 88px);
+      border-radius: 18px;
+      background: var(--beige);
+      border: 3px dashed rgba(110, 74, 44, .25);
+      display: grid;
+      place-items: center;
+      font-family: 'Fredoka', sans-serif;
+      font-size: clamp(28px, 5vw, 44px);
+      font-weight: 600;
+      color: var(--marron);
+      transition: transform .15s, background .2s, border-color .2s;
+    }
+    .ranura.llena {
+      background: white;
+      border-style: solid;
+      border-color: var(--durazno);
+      box-shadow: 0 4px 0 rgba(251, 210, 181, .8);
+    }
+    .ranura.activa {
+      background: #FFF4E2;
+      border-color: var(--marron-claro);
+      animation: latir 1.4s ease-in-out infinite;
+    }
+    .ranura.acierto { background: var(--verde); border-color: #88B775; color: #2F4D24; }
+    .ranura.error   { animation: temblor .4s ease-in-out; background: var(--rosa); border-color: #E69EA0; }
+    @keyframes latir {
+      0%, 100% { transform: scale(1); }
+      50%      { transform: scale(1.04); }
+    }
+    @keyframes temblor {
+      0%, 100% { transform: translateX(0); }
+      25% { transform: translateX(-6px); }
+      75% { transform: translateX(6px); }
+    }
+
+    /* Pool de letras para elegir */
+    .pool {
+      display: flex;
+      gap: 10px;
+      justify-content: center;
+      flex-wrap: wrap;
+      min-height: 88px;
+    }
+    .letra {
+      width: clamp(54px, 11vw, 72px);
+      height: clamp(54px, 11vw, 72px);
+      border-radius: 18px;
+      background: white;
+      border: 3px solid var(--beige);
+      box-shadow: 0 5px 0 var(--beige);
+      font-family: 'Fredoka', sans-serif;
+      font-size: clamp(26px, 5vw, 38px);
+      font-weight: 600;
+      color: var(--marron);
+      display: grid;
+      place-items: center;
+      transition: transform .12s, box-shadow .12s, opacity .2s;
+      user-select: none;
+      -webkit-user-select: none;
+    }
+    .letra:hover { transform: translateY(-3px); box-shadow: 0 8px 0 var(--beige); }
+    .letra:active { transform: translateY(3px); box-shadow: 0 2px 0 var(--beige); }
+    .letra.usada { opacity: 0; pointer-events: none; transform: scale(.4); }
+
+    /* Pie del juego */
+    .footer-juego {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+    .mensaje-feedback {
+      font-family: 'Fredoka', sans-serif;
+      font-size: clamp(18px, 2.4vw, 22px);
+      color: var(--marron-claro);
+      min-height: 28px;
+      flex: 1;
+      text-align: center;
+    }
+    .mensaje-feedback.acierto { color: #4F8038; }
+    .mensaje-feedback.error   { color: #C97070; }
+
+    .btn-secundario {
+      background: white;
+      border: 3px solid var(--beige);
+      border-radius: 999px;
+      padding: 12px 22px;
+      font-family: 'Fredoka', sans-serif;
+      font-weight: 500;
+      font-size: 16px;
+      color: var(--marron);
+      transition: all .15s;
+    }
+    .btn-secundario:hover { background: var(--beige); }
+
+    /* ========== CAPA DE FEEDBACK (gato chibi feliz / corazoncitos) ========== */
+    .capa-feedback {
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      display: grid;
+      place-items: center;
+      z-index: 50;
+    }
+    .gato-feedback {
+      width: clamp(180px, 30vw, 240px);
+      opacity: 0;
+      transform: scale(.4) translateY(40px);
+      transition: opacity .3s, transform .35s cubic-bezier(.34, 1.56, .64, 1);
+    }
+    .gato-feedback.visible {
+      opacity: 1;
+      transform: scale(1) translateY(0);
+    }
+    .corazon, .estrellita-flotante {
+      position: absolute;
+      animation: subir 1.6s ease-out forwards;
+      opacity: 0;
+    }
+    @keyframes subir {
+      0%   { opacity: 0; transform: translateY(0) scale(.6) rotate(0); }
+      20%  { opacity: 1; }
+      100% { opacity: 0; transform: translateY(-160px) scale(1.1) rotate(20deg); }
+    }
+
+    /* ========== PANTALLA FINAL ========== */
+    .final {
+      text-align: center;
+      background: white;
+      border-radius: var(--radio-lg);
+      padding: clamp(28px, 5vw, 48px);
+      box-shadow: var(--sombra);
+    }
+    .final h2 {
+      font-size: clamp(36px, 6vw, 56px);
+      color: var(--marron);
+      margin: 0 0 8px;
+    }
+    .final p {
+      font-size: clamp(18px, 2.4vw, 22px);
+      color: var(--marron-claro);
+      margin: 0 0 28px;
+    }
+    .final .gatito-grande {
+      width: clamp(160px, 28vw, 220px);
+      margin: 0 auto 18px;
+      display: block;
+    }
+    .pesca-coleccion {
+      display: flex;
+      gap: 10px;
+      justify-content: center;
+      flex-wrap: wrap;
+      margin: 24px 0;
+    }
+    .pesca-coleccion .pata { width: 36px; height: 36px; }
+
+    /* ========== CRÉDITOS / FOOTER ========== */
+    .creditos {
+      position: relative;
+      z-index: 1;
+      width: 100%;
+      text-align: center;
+      padding: 18px 16px 10px;
+      font-family: 'Nunito', sans-serif;
+      font-size: 14px;
+      font-weight: 700;
+      color: var(--marron-claro);
+      letter-spacing: .3px;
+      display: flex;
+      gap: 8px;
+      justify-content: center;
+      align-items: center;
+      flex-wrap: wrap;
+      opacity: .8;
+    }
+    .creditos-nombre { color: var(--marron); font-family: 'Fredoka', sans-serif; font-weight: 600; }
+    .creditos-sep { opacity: .5; }
+
+    /* ========== TWEAKS PANEL (ajustes) ========== */
+    #tweaks {
+      position: fixed;
+      bottom: 16px;
+      right: 16px;
+      width: 280px;
+      background: white;
+      border-radius: 22px;
+      padding: 16px;
+      box-shadow: 0 24px 60px -20px rgba(0, 0, 0, .25);
+      z-index: 100;
+      display: none;
+      font-family: 'Nunito', sans-serif;
+    }
+    #tweaks.visible { display: block; }
+    #tweaks h3 {
+      margin: 0 0 12px;
+      font-size: 18px;
+      color: var(--marron);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    #tweaks h3 button {
+      background: var(--beige);
+      border: none;
+      width: 26px;
+      height: 26px;
+      border-radius: 50%;
+      font-size: 14px;
+      color: var(--marron);
+    }
+    #tweaks .grupo { margin-bottom: 14px; }
+    #tweaks label {
+      display: block;
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--marron-claro);
+      margin-bottom: 6px;
+      text-transform: uppercase;
+      letter-spacing: .5px;
+    }
+    .swatches { display: flex; gap: 8px; }
+    .swatch {
+      width: 38px;
+      height: 38px;
+      border-radius: 12px;
+      border: 3px solid transparent;
+      transition: transform .15s;
+    }
+    .swatch.activo { border-color: var(--marron); }
+    .swatch:hover { transform: scale(1.08); }
+    .opciones-row { display: flex; gap: 6px; flex-wrap: wrap; }
+    .opciones-row .chip { padding: 6px 12px; font-size: 13px; }
+
+    /* Animaciones gato (parpadeo, cola) */
+    .ojo-cerrado { opacity: 0; }
+    .gato-anim .ojo-abierto { animation: parpadear 4s infinite; }
+    .gato-anim .ojo-cerrado { animation: parpadear-cerrado 4s infinite; }
+    @keyframes parpadear {
+      0%, 92%, 100% { opacity: 1; }
+      94%, 98%      { opacity: 0; }
+    }
+    @keyframes parpadear-cerrado {
+      0%, 92%, 100% { opacity: 0; }
+      94%, 98%      { opacity: 1; }
+    }
+    .gato-anim .cola { transform-origin: 50% 90%; animation: mover-cola 2.4s ease-in-out infinite; }
+    @keyframes mover-cola {
+      0%, 100% { transform: rotate(-6deg); }
+      50%      { transform: rotate(8deg); }
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+
+    <!-- ============== PANTALLA DE INICIO ============== -->
+    <section class="pantalla inicio activa" id="pantalla-inicio">
+      <!-- Gatito chibi grande con animación de respirar/parpadeo -->
+      <svg class="gatito-grande gato-anim" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg" aria-label="Gatito mascota">
+        <!-- cola -->
+        <path class="cola" d="M150 150 Q175 130 170 100 Q165 80 180 75" stroke="#B98A65" stroke-width="10" stroke-linecap="round" fill="none"/>
+        <!-- cuerpo -->
+        <ellipse cx="100" cy="140" rx="55" ry="42" fill="#F2E7D2"/>
+        <!-- patitas -->
+        <ellipse cx="78" cy="172" rx="14" ry="9" fill="#F2E7D2"/>
+        <ellipse cx="122" cy="172" rx="14" ry="9" fill="#F2E7D2"/>
+        <!-- cabeza -->
+        <circle cx="100" cy="90" r="55" fill="#F2E7D2"/>
+        <!-- orejas -->
+        <path d="M55 65 L62 30 L82 55 Z" fill="#F2E7D2"/>
+        <path d="M145 65 L138 30 L118 55 Z" fill="#F2E7D2"/>
+        <path d="M62 50 L66 38 L74 50 Z" fill="#F8C6C8"/>
+        <path d="M138 50 L134 38 L126 50 Z" fill="#F8C6C8"/>
+        <!-- mejillas -->
+        <circle cx="72" cy="100" r="7" fill="#F8C6C8" opacity=".7"/>
+        <circle cx="128" cy="100" r="7" fill="#F8C6C8" opacity=".7"/>
+        <!-- ojos abiertos -->
+        <g class="ojo-abierto">
+          <ellipse cx="84" cy="88" rx="5" ry="7" fill="#3A2A1E"/>
+          <ellipse cx="116" cy="88" rx="5" ry="7" fill="#3A2A1E"/>
+          <circle cx="86" cy="85" r="1.6" fill="white"/>
+          <circle cx="118" cy="85" r="1.6" fill="white"/>
+        </g>
+        <!-- ojos cerrados -->
+        <g class="ojo-cerrado">
+          <path d="M79 88 Q84 92 89 88" stroke="#3A2A1E" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+          <path d="M111 88 Q116 92 121 88" stroke="#3A2A1E" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+        </g>
+        <!-- boquita -->
+        <path d="M96 105 Q100 110 104 105" stroke="#3A2A1E" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+        <!-- naricita -->
+        <path d="M97 100 L100 103 L103 100 Z" fill="#B98A65"/>
+        <!-- bigotes -->
+        <line x1="65" y1="105" x2="80" y2="106" stroke="#B98A65" stroke-width="1.5" stroke-linecap="round"/>
+        <line x1="65" y1="110" x2="80" y2="110" stroke="#B98A65" stroke-width="1.5" stroke-linecap="round"/>
+        <line x1="120" y1="106" x2="135" y2="105" stroke="#B98A65" stroke-width="1.5" stroke-linecap="round"/>
+        <line x1="120" y1="110" x2="135" y2="110" stroke="#B98A65" stroke-width="1.5" stroke-linecap="round"/>
+      </svg>
+
+      <h1>Michi Letras</h1>
+      <p class="subtitulo">Aprendo a leer con gatitos 🐾</p>
+
+      <button class="btn-principal" id="btn-jugar">
+        <svg width="28" height="28" viewBox="0 0 24 24" fill="none"><path d="M8 5v14l11-7z" fill="white"/></svg>
+        Jugar
+      </button>
+
+      <div class="opciones-inicio">
+        <button class="chip activo" data-dificultad="facil">Fácil · 3-4 letras</button>
+        <button class="chip" data-dificultad="medio">Medio · 4-5 letras</button>
+      </div>
+    </section>
+
+    <!-- ============== PANTALLA DE JUEGO ============== -->
+    <section class="pantalla juego" id="pantalla-juego">
+
+      <!-- Encabezado: marca, progreso (huellitas) y acciones -->
+      <header class="header-juego">
+        <div class="marca">
+          <svg viewBox="0 0 40 40" xmlns="http://www.w3.org/2000/svg">
+            <g fill="#B98A65">
+              <ellipse cx="20" cy="25" rx="8" ry="7"/>
+              <circle cx="10" cy="15" r="4"/>
+              <circle cx="30" cy="15" r="4"/>
+              <circle cx="14" cy="8" r="3.2"/>
+              <circle cx="26" cy="8" r="3.2"/>
+            </g>
+          </svg>
+          <span>Michi Letras</span>
+        </div>
+
+        <div class="progreso" title="Huellitas conseguidas">
+          <svg class="pata" viewBox="0 0 40 40">
+            <g fill="#B98A65">
+              <ellipse cx="20" cy="25" rx="8" ry="7"/>
+              <circle cx="10" cy="15" r="4"/>
+              <circle cx="30" cy="15" r="4"/>
+              <circle cx="14" cy="8" r="3.2"/>
+              <circle cx="26" cy="8" r="3.2"/>
+            </g>
+          </svg>
+          <span class="num" id="num-huellitas">0</span>
+          <span style="color:var(--marron-claro);font-weight:700">/ <span id="num-total">5</span></span>
+        </div>
+
+        <div class="header-acciones">
+          <button class="btn-icono" id="btn-sonido" title="Sonido">
+            <svg viewBox="0 0 24 24" fill="currentColor"><path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3a4.5 4.5 0 00-2.5-4v8a4.5 4.5 0 002.5-4z"/></svg>
+          </button>
+          <button class="btn-icono" id="btn-tweaks" title="Ajustes">
+            <svg viewBox="0 0 24 24" fill="currentColor"><path d="M19.4 13a7.5 7.5 0 000-2l2-1.6-2-3.4-2.4 1a7.6 7.6 0 00-1.7-1L15 3h-4l-.3 2.6a7.6 7.6 0 00-1.7 1l-2.4-1-2 3.4L6.6 11a7.5 7.5 0 000 2l-2 1.6 2 3.4 2.4-1a7.6 7.6 0 001.7 1L11 21h4l.3-2.6a7.6 7.6 0 001.7-1l2.4 1 2-3.4-2-1.6zM12 15.5a3.5 3.5 0 110-7 3.5 3.5 0 010 7z"/></svg>
+          </button>
+          <button class="btn-icono" id="btn-volver" title="Volver al inicio">
+            <svg viewBox="0 0 24 24" fill="currentColor"><path d="M10 19l-7-7 7-7v4h11v6H10v4z"/></svg>
+          </button>
+        </div>
+      </header>
+
+      <!-- Área central con imagen, ranuras y letras -->
+      <div class="area-juego">
+        <!-- Tarjeta con la ilustración (placeholder SVG simple por palabra) -->
+        <div class="tarjeta-imagen">
+          <span class="palabra-pista" id="pista-letras"></span>
+          <div class="ilustracion" id="ilustracion-palabra"></div>
+          <!-- Gatito espectador chibi en la esquina -->
+          <svg class="gatito-mirando gato-anim" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+            <ellipse cx="50" cy="78" rx="28" ry="20" fill="#F2E7D2"/>
+            <circle cx="50" cy="50" r="28" fill="#F2E7D2"/>
+            <path d="M28 38 L33 18 L43 33 Z" fill="#F2E7D2"/>
+            <path d="M72 38 L67 18 L57 33 Z" fill="#F2E7D2"/>
+            <circle cx="36" cy="58" r="3" fill="#F8C6C8" opacity=".7"/>
+            <circle cx="64" cy="58" r="3" fill="#F8C6C8" opacity=".7"/>
+            <g class="ojo-abierto">
+              <ellipse cx="42" cy="50" rx="3" ry="4" fill="#3A2A1E"/>
+              <ellipse cx="58" cy="50" rx="3" ry="4" fill="#3A2A1E"/>
+            </g>
+            <g class="ojo-cerrado">
+              <path d="M39 50 Q42 52 45 50" stroke="#3A2A1E" stroke-width="1.6" fill="none" stroke-linecap="round"/>
+              <path d="M55 50 Q58 52 61 50" stroke="#3A2A1E" stroke-width="1.6" fill="none" stroke-linecap="round"/>
+            </g>
+            <path d="M48 60 Q50 63 52 60" stroke="#3A2A1E" stroke-width="1.6" fill="none" stroke-linecap="round"/>
+          </svg>
+        </div>
+
+        <!-- Ranuras + pool de letras + instrucción -->
+        <div class="panel-letras">
+          <h2 class="instruccion">Forma la palabra: <span class="palabra" id="palabra-objetivo"></span></h2>
+          <div class="ranuras" id="ranuras"></div>
+          <div class="pool" id="pool-letras"></div>
+        </div>
+      </div>
+
+      <!-- Pie con feedback y botón borrar -->
+      <footer class="footer-juego">
+        <button class="btn-secundario" id="btn-borrar">↺ Borrar</button>
+        <div class="mensaje-feedback" id="feedback">Toca las letras para formar la palabra ✨</div>
+        <button class="btn-secundario" id="btn-saltar">Saltar →</button>
+      </footer>
+    </section>
+
+    <!-- ============== PANTALLA FINAL ============== -->
+    <section class="pantalla final" id="pantalla-final">
+      <!-- Gatito feliz con pulgar arriba -->
+      <svg class="gatito-grande" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg" aria-label="Gatito feliz">
+        <!-- cola -->
+        <path d="M150 150 Q175 120 170 90 Q165 70 185 65" stroke="#B98A65" stroke-width="10" stroke-linecap="round" fill="none"/>
+        <!-- cuerpo -->
+        <ellipse cx="100" cy="140" rx="55" ry="42" fill="#F2E7D2"/>
+        <!-- patita arriba (pulgar arriba) -->
+        <g transform="rotate(-15 60 110)">
+          <ellipse cx="55" cy="100" rx="14" ry="20" fill="#F2E7D2"/>
+          <circle cx="50" cy="78" r="5" fill="#F2E7D2"/>
+        </g>
+        <ellipse cx="125" cy="172" rx="14" ry="9" fill="#F2E7D2"/>
+        <ellipse cx="95" cy="172" rx="14" ry="9" fill="#F2E7D2"/>
+        <!-- cabeza -->
+        <circle cx="105" cy="85" r="52" fill="#F2E7D2"/>
+        <path d="M62 60 L70 28 L88 52 Z" fill="#F2E7D2"/>
+        <path d="M148 60 L140 28 L122 52 Z" fill="#F2E7D2"/>
+        <path d="M70 48 L73 36 L82 48 Z" fill="#F8C6C8"/>
+        <path d="M140 48 L137 36 L128 48 Z" fill="#F8C6C8"/>
+        <circle cx="78" cy="95" r="7" fill="#F8C6C8" opacity=".8"/>
+        <circle cx="132" cy="95" r="7" fill="#F8C6C8" opacity=".8"/>
+        <!-- ojitos felices (línea curva) -->
+        <path d="M84 82 Q90 75 96 82" stroke="#3A2A1E" stroke-width="3" fill="none" stroke-linecap="round"/>
+        <path d="M114 82 Q120 75 126 82" stroke="#3A2A1E" stroke-width="3" fill="none" stroke-linecap="round"/>
+        <!-- sonrisa -->
+        <path d="M95 105 Q105 116 115 105" stroke="#3A2A1E" stroke-width="3" fill="none" stroke-linecap="round"/>
+        <path d="M102 99 L105 102 L108 99 Z" fill="#B98A65"/>
+      </svg>
+      <h2>¡Lo lograste!</h2>
+      <p>Conseguiste todas las huellitas 🐾</p>
+      <div class="pesca-coleccion" id="pesca-coleccion"></div>
+      <button class="btn-principal" id="btn-otra-vez">Jugar otra vez</button>
+    </section>
+
+  </div>
+
+  <!-- Capa fija para feedback flotante (gato grande, corazoncitos, estrellitas) -->
+  <div class="capa-feedback" id="capa-feedback"></div>
+
+  <!-- Crédito al pie del juego -->
+  <footer class="creditos">
+    <span class="creditos-nombre">Mabel Mereles</span>
+    <span class="creditos-sep">·</span>
+    <span>Psicopedagogía</span>
+    <span class="creditos-sep">·</span>
+    <span>2026</span>
+  </footer>
+
+  <!-- Panel de Tweaks (ajustes) -->
+  <div id="tweaks">
+    <h3>Ajustes <button id="cerrar-tweaks">×</button></h3>
+    <div class="grupo">
+      <label>Color principal</label>
+      <div class="swatches" id="paleta-swatches"></div>
+    </div>
+    <div class="grupo">
+      <label>Dificultad</label>
+      <div class="opciones-row">
+        <button class="chip activo" data-dif="facil">Fácil</button>
+        <button class="chip" data-dif="medio">Medio</button>
+      </div>
+    </div>
+    <div class="grupo">
+      <label>Letras mayúsculas</label>
+      <div class="opciones-row">
+        <button class="chip activo" data-mayus="true">SÍ</button>
+        <button class="chip" data-mayus="false">no</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    /* =========================================================
+       MICHI LETRAS — Lógica del juego (vanilla JS, comentado)
+       ========================================================= */
+
+    /* ---------- 1. BANCO DE PALABRAS ----------
+       Cada entrada tiene la palabra y un SVG con su ilustración tierna.
+       Para sumar palabras: agrega { palabra: 'xxx', ilustracion: '<svg>...</svg>' }
+    */
+    const BANCO_PALABRAS = [
+      { palabra: 'sol', ilustracion: `
+        <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+          <g stroke="#E8A93A" stroke-width="6" stroke-linecap="round">
+            <line x1="50" y1="10" x2="50" y2="22"/>
+            <line x1="50" y1="78" x2="50" y2="90"/>
+            <line x1="10" y1="50" x2="22" y2="50"/>
+            <line x1="78" y1="50" x2="90" y2="50"/>
+            <line x1="20" y1="20" x2="28" y2="28"/>
+            <line x1="72" y1="72" x2="80" y2="80"/>
+            <line x1="80" y1="20" x2="72" y2="28"/>
+            <line x1="28" y1="72" x2="20" y2="80"/>
+          </g>
+          <circle cx="50" cy="50" r="22" fill="#FFE7A1" stroke="#E8A93A" stroke-width="3"/>
+          <path d="M43 53 Q47 57 51 53" stroke="#3A2A1E" stroke-width="2" fill="none" stroke-linecap="round"/>
+          <circle cx="42" cy="46" r="1.6" fill="#3A2A1E"/>
+          <circle cx="56" cy="46" r="1.6" fill="#3A2A1E"/>
+          <circle cx="40" cy="51" r="2" fill="#F8C6C8" opacity=".7"/>
+          <circle cx="58" cy="51" r="2" fill="#F8C6C8" opacity=".7"/>
+        </svg>` },
+      { palabra: 'casa', ilustracion: `
+        <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+          <path d="M20 50 L50 22 L80 50 L80 84 L20 84 Z" fill="#FBD2B5" stroke="#B98A65" stroke-width="3" stroke-linejoin="round"/>
+          <path d="M14 52 L50 18 L86 52" stroke="#B98A65" stroke-width="3" fill="none" stroke-linejoin="round"/>
+          <rect x="42" y="58" width="16" height="26" rx="3" fill="#B98A65"/>
+          <circle cx="54" cy="72" r="1.6" fill="#FFE7A1"/>
+          <rect x="26" y="56" width="12" height="12" rx="2" fill="#CFE6EE" stroke="#B98A65" stroke-width="2"/>
+          <rect x="62" y="56" width="12" height="12" rx="2" fill="#CFE6EE" stroke="#B98A65" stroke-width="2"/>
+          <path d="M50 30 L60 30 L60 22" stroke="#B98A65" stroke-width="3" fill="none"/>
+        </svg>` },
+      { palabra: 'gato', ilustracion: `
+        <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+          <ellipse cx="50" cy="72" rx="28" ry="18" fill="#F2E7D2" stroke="#B98A65" stroke-width="2"/>
+          <circle cx="50" cy="48" r="26" fill="#F2E7D2" stroke="#B98A65" stroke-width="2"/>
+          <path d="M30 38 L36 18 L46 36 Z" fill="#F2E7D2" stroke="#B98A65" stroke-width="2"/>
+          <path d="M70 38 L64 18 L54 36 Z" fill="#F2E7D2" stroke="#B98A65" stroke-width="2"/>
+          <path d="M34 32 L37 22 L42 32 Z" fill="#F8C6C8"/>
+          <path d="M66 32 L63 22 L58 32 Z" fill="#F8C6C8"/>
+          <ellipse cx="42" cy="48" rx="3" ry="4" fill="#3A2A1E"/>
+          <ellipse cx="58" cy="48" rx="3" ry="4" fill="#3A2A1E"/>
+          <circle cx="36" cy="55" r="3" fill="#F8C6C8" opacity=".7"/>
+          <circle cx="64" cy="55" r="3" fill="#F8C6C8" opacity=".7"/>
+          <path d="M48 56 L50 59 L52 56 Z" fill="#B98A65"/>
+          <path d="M46 60 Q50 64 54 60" stroke="#3A2A1E" stroke-width="1.6" fill="none" stroke-linecap="round"/>
+          <path d="M76 70 Q88 60 84 50" stroke="#B98A65" stroke-width="3" fill="none" stroke-linecap="round"/>
+        </svg>` },
+      { palabra: 'luna', ilustracion: `
+        <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+          <circle cx="22" cy="20" r="2" fill="#FFE7A1"/>
+          <circle cx="80" cy="28" r="1.6" fill="#FFE7A1"/>
+          <circle cx="18" cy="70" r="1.4" fill="#FFE7A1"/>
+          <circle cx="84" cy="78" r="2" fill="#FFE7A1"/>
+          <path d="M70 28 A30 30 0 1 0 70 78 A22 22 0 1 1 70 28 Z" fill="#FFE7A1" stroke="#E8A93A" stroke-width="3"/>
+          <circle cx="48" cy="42" r="3" fill="#E8A93A" opacity=".4"/>
+          <circle cx="42" cy="58" r="2" fill="#E8A93A" opacity=".4"/>
+          <ellipse cx="44" cy="50" rx="1.6" ry="2" fill="#3A2A1E"/>
+          <ellipse cx="56" cy="50" rx="1.6" ry="2" fill="#3A2A1E"/>
+          <path d="M48 56 Q50 58 52 56" stroke="#3A2A1E" stroke-width="1.4" fill="none" stroke-linecap="round"/>
+          <circle cx="40" cy="55" r="2" fill="#F8C6C8" opacity=".7"/>
+          <circle cx="60" cy="55" r="2" fill="#F8C6C8" opacity=".7"/>
+        </svg>` },
+      { palabra: 'mano', ilustracion: `
+        <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+          <path d="M35 80 Q30 60 32 50 L32 30 Q32 24 38 24 Q44 24 44 30 L44 48
+                   L46 30 Q46 22 52 22 Q58 22 58 30 L58 50
+                   L60 32 Q60 24 66 24 Q72 24 72 32 L72 50
+                   L74 38 Q74 32 78 32 Q82 32 82 38 L82 60
+                   Q82 78 70 86 L48 86 Q38 86 35 80 Z"
+                fill="#FBD2B5" stroke="#B98A65" stroke-width="3" stroke-linejoin="round"/>
+          <circle cx="55" cy="58" r="3" fill="#F8C6C8" opacity=".5"/>
+        </svg>` },
+      { palabra: 'pez', ilustracion: `
+        <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+          <path d="M70 50 L92 32 L88 50 L92 68 Z" fill="#FBD2B5" stroke="#B98A65" stroke-width="3" stroke-linejoin="round"/>
+          <ellipse cx="46" cy="50" rx="32" ry="20" fill="#FBD2B5" stroke="#B98A65" stroke-width="3"/>
+          <path d="M30 50 Q40 42 50 50" stroke="#B98A65" stroke-width="2" fill="none"/>
+          <path d="M30 56 Q40 50 50 56" stroke="#B98A65" stroke-width="2" fill="none"/>
+          <circle cx="32" cy="46" r="4" fill="white"/>
+          <circle cx="32" cy="46" r="2" fill="#3A2A1E"/>
+          <path d="M22 50 Q24 53 22 56" stroke="#3A2A1E" stroke-width="1.6" fill="none" stroke-linecap="round"/>
+        </svg>` },
+      { palabra: 'pan', ilustracion: `
+        <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+          <ellipse cx="50" cy="58" rx="36" ry="22" fill="#FBD2B5" stroke="#B98A65" stroke-width="3"/>
+          <path d="M22 60 Q35 48 50 56 Q65 48 78 60" stroke="#B98A65" stroke-width="2" fill="none"/>
+          <path d="M28 66 Q40 56 50 62 Q60 56 72 66" stroke="#B98A65" stroke-width="2" fill="none" opacity=".6"/>
+          <ellipse cx="42" cy="56" rx="2" ry="3" fill="#3A2A1E"/>
+          <ellipse cx="58" cy="56" rx="2" ry="3" fill="#3A2A1E"/>
+          <path d="M46 64 Q50 67 54 64" stroke="#3A2A1E" stroke-width="1.6" fill="none" stroke-linecap="round"/>
+          <circle cx="36" cy="62" r="2.5" fill="#F8C6C8" opacity=".7"/>
+          <circle cx="64" cy="62" r="2.5" fill="#F8C6C8" opacity=".7"/>
+        </svg>` },
+      { palabra: 'flor', ilustracion: `
+        <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+          <line x1="50" y1="60" x2="50" y2="92" stroke="#88B775" stroke-width="4" stroke-linecap="round"/>
+          <path d="M50 78 Q60 72 64 64" stroke="#88B775" stroke-width="3" fill="none" stroke-linecap="round"/>
+          <ellipse cx="64" cy="64" rx="6" ry="3" fill="#88B775" transform="rotate(-30 64 64)"/>
+          <circle cx="50" cy="32" r="12" fill="#F8C6C8"/>
+          <circle cx="34" cy="46" r="12" fill="#F8C6C8"/>
+          <circle cx="66" cy="46" r="12" fill="#F8C6C8"/>
+          <circle cx="42" cy="60" r="12" fill="#F8C6C8"/>
+          <circle cx="58" cy="60" r="12" fill="#F8C6C8"/>
+          <circle cx="50" cy="48" r="11" fill="#FFE7A1"/>
+          <ellipse cx="46" cy="46" rx="1.6" ry="2" fill="#3A2A1E"/>
+          <ellipse cx="54" cy="46" rx="1.6" ry="2" fill="#3A2A1E"/>
+          <path d="M47 51 Q50 53 53 51" stroke="#3A2A1E" stroke-width="1.4" fill="none" stroke-linecap="round"/>
+        </svg>` },
+      { palabra: 'tren', ilustracion: `
+        <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+          <rect x="14" y="40" width="60" height="32" rx="6" fill="#CFE6EE" stroke="#7AA9B5" stroke-width="3"/>
+          <rect x="60" y="28" width="22" height="22" rx="4" fill="#CFE6EE" stroke="#7AA9B5" stroke-width="3"/>
+          <rect x="64" y="32" width="14" height="12" rx="2" fill="white" stroke="#7AA9B5" stroke-width="2"/>
+          <rect x="20" y="46" width="12" height="14" rx="2" fill="white" stroke="#7AA9B5" stroke-width="2"/>
+          <rect x="38" y="46" width="14" height="14" rx="2" fill="white" stroke="#7AA9B5" stroke-width="2"/>
+          <circle cx="26" cy="76" r="6" fill="#3A2A1E"/>
+          <circle cx="50" cy="76" r="6" fill="#3A2A1E"/>
+          <circle cx="70" cy="76" r="6" fill="#3A2A1E"/>
+          <circle cx="74" cy="22" r="3" fill="#FBF6EC" opacity=".9"/>
+          <circle cx="80" cy="18" r="2" fill="#FBF6EC" opacity=".7"/>
+        </svg>` },
+      { palabra: 'oso', ilustracion: `
+        <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+          <circle cx="32" cy="32" r="10" fill="#B98A65"/>
+          <circle cx="68" cy="32" r="10" fill="#B98A65"/>
+          <circle cx="32" cy="32" r="5" fill="#FBD2B5"/>
+          <circle cx="68" cy="32" r="5" fill="#FBD2B5"/>
+          <circle cx="50" cy="54" r="30" fill="#B98A65"/>
+          <ellipse cx="50" cy="62" rx="18" ry="14" fill="#FBD2B5"/>
+          <ellipse cx="42" cy="50" rx="3" ry="4" fill="#3A2A1E"/>
+          <ellipse cx="58" cy="50" rx="3" ry="4" fill="#3A2A1E"/>
+          <ellipse cx="50" cy="60" rx="4" ry="3" fill="#3A2A1E"/>
+          <path d="M44 64 Q50 70 56 64" stroke="#3A2A1E" stroke-width="2" fill="none" stroke-linecap="round"/>
+        </svg>` },
+    ];
+
+    /* Palabras de nivel medio (4-5 letras) */
+    const BANCO_MEDIO = ['casa', 'mano', 'gato', 'luna', 'flor', 'tren', 'pelo', 'mesa', 'pato', 'rana'];
+    const BANCO_FACIL = ['sol', 'pez', 'pan', 'oso', 'ojo'];
+
+    /* ---------- 2. ESTADO DEL JUEGO ---------- */
+    const estado = {
+      pantalla: 'inicio',          // 'inicio' | 'juego' | 'final'
+      dificultad: 'facil',          // 'facil' | 'medio'
+      mayusculas: true,
+      sonido: true,
+      indicePalabra: 0,
+      huellitas: 0,
+      totalPalabras: 5,
+      cola: [],                     // palabras pendientes de jugar
+      palabraActual: null,          // { palabra, ilustracion }
+      letrasRanura: [],             // letras puestas por el niño
+      letrasPool: [],               // letras del pool (con id único)
+      bloqueado: false,             // mientras se muestra feedback
+    };
+
+    /* ---------- 3. UTILIDADES ---------- */
+    const $  = sel => document.querySelector(sel);
+    const $$ = sel => document.querySelectorAll(sel);
+
+    /** Mezcla un array (Fisher-Yates) */
+    function mezclar(arr) {
+      const a = arr.slice();
+      for (let i = a.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [a[i], a[j]] = [a[j], a[i]];
+      }
+      return a;
+    }
+
+    /** Cambia entre pantallas */
+    function mostrarPantalla(nombre) {
+      estado.pantalla = nombre;
+      $$('.pantalla').forEach(p => p.classList.remove('activa'));
+      $('#pantalla-' + nombre).classList.add('activa');
+    }
+
+    /* ---------- 4. SONIDO (WebAudio API, opcional) ---------- */
+    let audioCtx = null;
+    function ctx() {
+      if (!audioCtx) {
+        try { audioCtx = new (window.AudioContext || window.webkitAudioContext)(); }
+        catch (e) { /* navegador sin audio */ }
+      }
+      return audioCtx;
+    }
+    /** Reproduce una nota suave (campanita o ploc) */
+    function tocar(frecuencias, duracion = 0.18, tipo = 'sine', volumen = 0.12) {
+      if (!estado.sonido) return;
+      const ac = ctx();
+      if (!ac) return;
+      const t0 = ac.currentTime;
+      frecuencias.forEach((f, i) => {
+        const osc = ac.createOscillator();
+        const gain = ac.createGain();
+        osc.type = tipo;
+        osc.frequency.value = f;
+        gain.gain.value = 0;
+        osc.connect(gain).connect(ac.destination);
+        const inicio = t0 + i * 0.08;
+        gain.gain.setValueAtTime(0, inicio);
+        gain.gain.linearRampToValueAtTime(volumen, inicio + 0.02);
+        gain.gain.exponentialRampToValueAtTime(0.0001, inicio + duracion);
+        osc.start(inicio);
+        osc.stop(inicio + duracion + 0.05);
+      });
+    }
+    const sonidoLetra   = () => tocar([880],          0.12, 'sine', 0.08);
+    const sonidoAcierto = () => tocar([523, 659, 784, 1046], 0.25, 'sine', 0.12);
+    const sonidoError   = () => tocar([330, 280],     0.25, 'sine', 0.10);
+    const sonidoFinal   = () => tocar([523, 659, 784, 1046, 1318], 0.4, 'triangle', 0.12);
+
+    /* ---------- 5. ARMAR UNA PALABRA NUEVA ---------- */
+    function armarCola() {
+      const fuente = estado.dificultad === 'medio'
+        ? BANCO_PALABRAS.filter(p => BANCO_MEDIO.includes(p.palabra))
+        : BANCO_PALABRAS.filter(p => BANCO_FACIL.includes(p.palabra) || p.palabra.length <= 4);
+      // Tomamos hasta 5 palabras al azar
+      estado.cola = mezclar(fuente).slice(0, estado.totalPalabras);
+      estado.indicePalabra = 0;
+      estado.huellitas = 0;
+    }
+
+    function cargarPalabra() {
+      const p = estado.cola[estado.indicePalabra];
+      estado.palabraActual = p;
+      estado.letrasRanura = new Array(p.palabra.length).fill(null);
+      // Generamos letras del pool: las correctas + 1-2 letras "distractoras"
+      const letras = p.palabra.split('');
+      const distractoras = generarDistractoras(p.palabra, estado.dificultad === 'medio' ? 2 : 1);
+      const pool = mezclar([...letras, ...distractoras]).map((l, i) => ({ id: i, letra: l, usada: false }));
+      estado.letrasPool = pool;
+      renderizarJuego();
+      // Mensaje neutral
+      $('#feedback').textContent = 'Toca las letras para formar la palabra ✨';
+      $('#feedback').className = 'mensaje-feedback';
+    }
+
+    function generarDistractoras(palabra, cantidad) {
+      const alfabeto = 'aeioubcdfghlmnprstv'.split('');
+      const usadas = palabra.split('');
+      const candidatas = alfabeto.filter(l => !usadas.includes(l));
+      return mezclar(candidatas).slice(0, cantidad);
+    }
+
+    /* ---------- 6. RENDER ---------- */
+    function fmtLetra(l) { return estado.mayusculas ? l.toUpperCase() : l.toLowerCase(); }
+
+    function renderizarJuego() {
+      const p = estado.palabraActual;
+      // Ilustración + pista
+      $('#ilustracion-palabra').innerHTML = p.ilustracion;
+      $('#palabra-objetivo').textContent = fmtLetra(p.palabra);
+      $('#pista-letras').textContent = p.palabra.length + ' letras';
+      // Progreso
+      $('#num-huellitas').textContent = estado.huellitas;
+      $('#num-total').textContent = estado.totalPalabras;
+
+      // Ranuras
+      const ranurasEl = $('#ranuras');
+      ranurasEl.innerHTML = '';
+      const proximaVacia = estado.letrasRanura.indexOf(null);
+      estado.letrasRanura.forEach((l, i) => {
+        const r = document.createElement('div');
+        r.className = 'ranura' + (l ? ' llena' : '') + (i === proximaVacia ? ' activa' : '');
+        r.textContent = l ? fmtLetra(l.letra) : '';
+        r.dataset.idx = i;
+        if (l) r.addEventListener('click', () => quitarLetra(i));
+        ranurasEl.appendChild(r);
+      });
+
+      // Pool de letras
+      const poolEl = $('#pool-letras');
+      poolEl.innerHTML = '';
+      estado.letrasPool.forEach(letra => {
+        const b = document.createElement('button');
+        b.className = 'letra' + (letra.usada ? ' usada' : '');
+        b.textContent = fmtLetra(letra.letra);
+        b.dataset.id = letra.id;
+        b.addEventListener('click', () => ponerLetra(letra.id));
+        poolEl.appendChild(b);
+      });
+    }
+
+    /* ---------- 7. INTERACCIONES ---------- */
+    function ponerLetra(idLetra) {
+      if (estado.bloqueado) return;
+      const letra = estado.letrasPool.find(l => l.id === idLetra);
+      if (!letra || letra.usada) return;
+      const idx = estado.letrasRanura.indexOf(null);
+      if (idx === -1) return;             // todas las ranuras llenas
+      letra.usada = true;
+      estado.letrasRanura[idx] = letra;
+      sonidoLetra();
+      renderizarJuego();
+      // Si todas las ranuras están llenas, verificamos
+      if (!estado.letrasRanura.includes(null)) {
+        setTimeout(verificarPalabra, 200);
+      }
+    }
+
+    function quitarLetra(idxRanura) {
+      if (estado.bloqueado) return;
+      const letra = estado.letrasRanura[idxRanura];
+      if (!letra) return;
+      letra.usada = false;
+      estado.letrasRanura[idxRanura] = null;
+      renderizarJuego();
+    }
+
+    function borrarTodo() {
+      if (estado.bloqueado) return;
+      estado.letrasRanura.forEach(l => { if (l) l.usada = false; });
+      estado.letrasRanura = estado.letrasRanura.map(() => null);
+      renderizarJuego();
+    }
+
+    function verificarPalabra() {
+      const formada = estado.letrasRanura.map(l => l.letra).join('');
+      if (formada === estado.palabraActual.palabra) {
+        celebrarAcierto();
+      } else {
+        mostrarError();
+      }
+    }
+
+    /* ---------- 8. FEEDBACK ACIERTO / ERROR ---------- */
+    function celebrarAcierto() {
+      estado.bloqueado = true;
+      sonidoAcierto();
+      // Marcar ranuras en verde
+      $$('#ranuras .ranura').forEach(r => r.classList.add('acierto'));
+      // Mensaje
+      const mensajes = ['¡Muy bien! 🌟', '¡Genial! 🐾', '¡Bravo! 💛', '¡Hermoso!', '¡Lo lograste! ✨'];
+      const fb = $('#feedback');
+      fb.textContent = mensajes[Math.floor(Math.random() * mensajes.length)];
+      fb.className = 'mensaje-feedback acierto';
+      // Animación: gato chibi feliz aparece + corazoncitos
+      mostrarGatoFeliz();
+      lanzarCorazones();
+      estado.huellitas++;
+      // Esperar y avanzar
+      setTimeout(() => {
+        estado.bloqueado = false;
+        ocultarGatoFeliz();
+        estado.indicePalabra++;
+        if (estado.indicePalabra >= estado.cola.length) {
+          finalizar();
+        } else {
+          cargarPalabra();
+        }
+      }, 1900);
+    }
+
+    function mostrarError() {
+      estado.bloqueado = true;
+      sonidoError();
+      $$('#ranuras .ranura').forEach(r => r.classList.add('error'));
+      const mensajes = ['Casi! Probá de nuevo 🐱', 'Intentá otra vez, vos podés 💛', 'Mirá bien las letras 👀'];
+      const fb = $('#feedback');
+      fb.textContent = mensajes[Math.floor(Math.random() * mensajes.length)];
+      fb.className = 'mensaje-feedback error';
+      setTimeout(() => {
+        estado.bloqueado = false;
+        // Vaciamos las ranuras para reintentar
+        estado.letrasRanura.forEach(l => { if (l) l.usada = false; });
+        estado.letrasRanura = estado.letrasRanura.map(() => null);
+        renderizarJuego();
+      }, 1300);
+    }
+
+    function mostrarGatoFeliz() {
+      const capa = $('#capa-feedback');
+      capa.innerHTML = `
+        <svg class="gato-feedback" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+          <ellipse cx="100" cy="140" rx="55" ry="42" fill="#F2E7D2"/>
+          <g transform="rotate(-25 60 110)">
+            <ellipse cx="55" cy="100" rx="14" ry="22" fill="#F2E7D2"/>
+            <circle cx="50" cy="76" r="5" fill="#F2E7D2"/>
+          </g>
+          <ellipse cx="125" cy="172" rx="14" ry="9" fill="#F2E7D2"/>
+          <ellipse cx="95" cy="172" rx="14" ry="9" fill="#F2E7D2"/>
+          <circle cx="105" cy="85" r="52" fill="#F2E7D2"/>
+          <path d="M62 60 L70 28 L88 52 Z" fill="#F2E7D2"/>
+          <path d="M148 60 L140 28 L122 52 Z" fill="#F2E7D2"/>
+          <path d="M70 48 L73 36 L82 48 Z" fill="#F8C6C8"/>
+          <path d="M140 48 L137 36 L128 48 Z" fill="#F8C6C8"/>
+          <circle cx="78" cy="95" r="7" fill="#F8C6C8" opacity=".8"/>
+          <circle cx="132" cy="95" r="7" fill="#F8C6C8" opacity=".8"/>
+          <path d="M84 82 Q90 75 96 82" stroke="#3A2A1E" stroke-width="3" fill="none" stroke-linecap="round"/>
+          <path d="M114 82 Q120 75 126 82" stroke="#3A2A1E" stroke-width="3" fill="none" stroke-linecap="round"/>
+          <path d="M95 105 Q105 116 115 105" stroke="#3A2A1E" stroke-width="3" fill="none" stroke-linecap="round"/>
+          <path d="M102 99 L105 102 L108 99 Z" fill="#B98A65"/>
+        </svg>`;
+      requestAnimationFrame(() => capa.querySelector('.gato-feedback').classList.add('visible'));
+    }
+
+    function ocultarGatoFeliz() {
+      const g = $('#capa-feedback .gato-feedback');
+      if (g) g.classList.remove('visible');
+      setTimeout(() => { $('#capa-feedback').innerHTML = ''; }, 300);
+    }
+
+    /** Lanza corazoncitos flotando hacia arriba */
+    function lanzarCorazones() {
+      const capa = $('#capa-feedback');
+      const cantidad = 8;
+      for (let i = 0; i < cantidad; i++) {
+        const c = document.createElement('div');
+        c.className = 'corazon';
+        c.innerHTML = `<svg width="28" height="28" viewBox="0 0 24 24"><path d="M12 21s-7-4.5-7-11a4 4 0 017-2.6A4 4 0 0119 10c0 6.5-7 11-7 11z" fill="#F8C6C8"/></svg>`;
+        c.style.left = (50 + (Math.random() - 0.5) * 30) + '%';
+        c.style.top = '55%';
+        c.style.animationDelay = (i * 0.07) + 's';
+        capa.appendChild(c);
+        setTimeout(() => c.remove(), 1700 + i * 70);
+      }
+    }
+
+    /* ---------- 9. PANTALLA FINAL ---------- */
+    function finalizar() {
+      sonidoFinal();
+      // Renderizar coleccion de huellitas
+      const col = $('#pesca-coleccion');
+      col.innerHTML = '';
+      for (let i = 0; i < estado.huellitas; i++) {
+        col.insertAdjacentHTML('beforeend', `
+          <svg class="pata" viewBox="0 0 40 40">
+            <g fill="#B98A65">
+              <ellipse cx="20" cy="25" rx="8" ry="7"/>
+              <circle cx="10" cy="15" r="4"/>
+              <circle cx="30" cy="15" r="4"/>
+              <circle cx="14" cy="8" r="3.2"/>
+              <circle cx="26" cy="8" r="3.2"/>
+            </g>
+          </svg>`);
+      }
+      mostrarPantalla('final');
+    }
+
+    /* ---------- 10. ARRANQUE / EVENTOS ---------- */
+    function iniciarPartida() {
+      armarCola();
+      cargarPalabra();
+      mostrarPantalla('juego');
+    }
+
+    // Botones pantalla inicio
+    $('#btn-jugar').addEventListener('click', iniciarPartida);
+    $$('.opciones-inicio .chip').forEach(c => {
+      c.addEventListener('click', () => {
+        $$('.opciones-inicio .chip').forEach(x => x.classList.remove('activo'));
+        c.classList.add('activo');
+        estado.dificultad = c.dataset.dificultad;
+      });
+    });
+
+    // Botones pantalla juego
+    $('#btn-borrar').addEventListener('click', borrarTodo);
+    $('#btn-saltar').addEventListener('click', () => {
+      if (estado.bloqueado) return;
+      estado.indicePalabra++;
+      if (estado.indicePalabra >= estado.cola.length) finalizar();
+      else cargarPalabra();
+    });
+    $('#btn-volver').addEventListener('click', () => mostrarPantalla('inicio'));
+    $('#btn-sonido').addEventListener('click', () => {
+      estado.sonido = !estado.sonido;
+      $('#btn-sonido').classList.toggle('off', !estado.sonido);
+    });
+
+    // Pantalla final
+    $('#btn-otra-vez').addEventListener('click', iniciarPartida);
+
+    /* ---------- 11. PANEL DE TWEAKS / AJUSTES ---------- */
+    const PALETAS = [
+      { nombre: 'Durazno',  marronClaro: '#B98A65', durazno: '#FBD2B5', amarillo: '#FFE7A1' },
+      { nombre: 'Celeste',  marronClaro: '#7AA9B5', durazno: '#CFE6EE', amarillo: '#E0F0F4' },
+      { nombre: 'Rosado',   marronClaro: '#C77E8A', durazno: '#F8C6C8', amarillo: '#FBD9DD' },
+      { nombre: 'Verdecito',marronClaro: '#88B775', durazno: '#B8D8A8', amarillo: '#D8EBC8' },
+    ];
+    const swatchesEl = $('#paleta-swatches');
+    PALETAS.forEach((p, i) => {
+      const s = document.createElement('button');
+      s.className = 'swatch' + (i === 0 ? ' activo' : '');
+      s.style.background = p.marronClaro;
+      s.title = p.nombre;
+      s.addEventListener('click', () => aplicarPaleta(i));
+      swatchesEl.appendChild(s);
+    });
+    function aplicarPaleta(idx) {
+      $$('#paleta-swatches .swatch').forEach((x, j) => x.classList.toggle('activo', j === idx));
+      const p = PALETAS[idx];
+      document.documentElement.style.setProperty('--marron-claro', p.marronClaro);
+      document.documentElement.style.setProperty('--durazno', p.durazno);
+      document.documentElement.style.setProperty('--amarillo', p.amarillo);
+    }
+
+    $('#btn-tweaks').addEventListener('click', () => $('#tweaks').classList.add('visible'));
+    $('#cerrar-tweaks').addEventListener('click', () => $('#tweaks').classList.remove('visible'));
+
+    $$('#tweaks [data-dif]').forEach(c => {
+      c.addEventListener('click', () => {
+        $$('#tweaks [data-dif]').forEach(x => x.classList.remove('activo'));
+        c.classList.add('activo');
+        estado.dificultad = c.dataset.dif;
+        // Sincroniza chip de inicio
+        $$('.opciones-inicio .chip').forEach(x => {
+          x.classList.toggle('activo', x.dataset.dificultad === estado.dificultad);
+        });
+      });
+    });
+    $$('#tweaks [data-mayus]').forEach(c => {
+      c.addEventListener('click', () => {
+        $$('#tweaks [data-mayus]').forEach(x => x.classList.remove('activo'));
+        c.classList.add('activo');
+        estado.mayusculas = c.dataset.mayus === 'true';
+        if (estado.pantalla === 'juego') renderizarJuego();
+      });
+    });
+
+    // Atajo: tecla "T" abre/cierra Tweaks
+    document.addEventListener('keydown', e => {
+      if (e.key === 't' || e.key === 'T') $('#tweaks').classList.toggle('visible');
+    });
+  </script>
+</body>
+</html>
