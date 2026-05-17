@@ -915,14 +915,37 @@
         </svg>` },
       { palabra: 'pan', ilustracion: `
         <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
-          <ellipse cx="50" cy="58" rx="36" ry="22" fill="#FBD2B5" stroke="#B98A65" stroke-width="3"/>
-          <path d="M22 60 Q35 48 50 56 Q65 48 78 60" stroke="#B98A65" stroke-width="2" fill="none"/>
-          <path d="M28 66 Q40 56 50 62 Q60 56 72 66" stroke="#B98A65" stroke-width="2" fill="none" opacity=".6"/>
-          <ellipse cx="42" cy="56" rx="2" ry="3" fill="#3A2A1E"/>
-          <ellipse cx="58" cy="56" rx="2" ry="3" fill="#3A2A1E"/>
-          <path d="M46 64 Q50 67 54 64" stroke="#3A2A1E" stroke-width="1.6" fill="none" stroke-linecap="round"/>
-          <circle cx="36" cy="62" r="2.5" fill="#F8C6C8" opacity=".7"/>
-          <circle cx="64" cy="62" r="2.5" fill="#F8C6C8" opacity=".7"/>
+          <!-- baguette / barra de pan vista de costado -->
+          <!-- sombra dorada de fondo -->
+          <ellipse cx="50" cy="78" rx="40" ry="6" fill="#B98A65" opacity=".18"/>
+          <!-- corteza oscura: forma de barra alargada con extremos redondeados -->
+          <path d="M16 56
+                   Q10 50 18 42
+                   Q28 32 50 30
+                   Q72 32 82 42
+                   Q90 50 84 56
+                   Q90 62 82 70
+                   Q72 78 50 78
+                   Q28 78 18 70
+                   Q10 62 16 56 Z"
+                fill="#D9A26A" stroke="#8E5A35" stroke-width="3" stroke-linejoin="round"/>
+          <!-- miga interior visible (highlight superior) -->
+          <path d="M22 52 Q30 38 50 36 Q70 38 78 52"
+                fill="#F2C58A" opacity=".85"/>
+          <!-- cortes diagonales típicos de la baguette -->
+          <path d="M28 44 L34 60" stroke="#8E5A35" stroke-width="2.8" stroke-linecap="round"/>
+          <path d="M42 40 L48 58" stroke="#8E5A35" stroke-width="2.8" stroke-linecap="round"/>
+          <path d="M56 40 L62 58" stroke="#8E5A35" stroke-width="2.8" stroke-linecap="round"/>
+          <path d="M70 44 L76 60" stroke="#8E5A35" stroke-width="2.8" stroke-linecap="round"/>
+          <!-- pequeños brillos para textura crujiente -->
+          <circle cx="38" cy="50" r="1.2" fill="#FFEFC9" opacity=".8"/>
+          <circle cx="66" cy="50" r="1.2" fill="#FFEFC9" opacity=".8"/>
+          <!-- carita amable -->
+          <ellipse cx="44" cy="64" rx="1.8" ry="2.4" fill="#3A2A1E"/>
+          <ellipse cx="56" cy="64" rx="1.8" ry="2.4" fill="#3A2A1E"/>
+          <path d="M46 70 Q50 73 54 70" stroke="#3A2A1E" stroke-width="1.6" fill="none" stroke-linecap="round"/>
+          <circle cx="38" cy="68" r="2.5" fill="#F8C6C8" opacity=".7"/>
+          <circle cx="62" cy="68" r="2.5" fill="#F8C6C8" opacity=".7"/>
         </svg>` },
       { palabra: 'flor', ilustracion: `
         <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
@@ -1380,6 +1403,9 @@
       mostrarGatoFeliz();
       lanzarCorazones();
       estado.huellitas++;
+      // Actualizamos el contador en pantalla al instante para que se vea
+      // "10/10" durante la celebración de la última palabra.
+      $('#num-huellitas').textContent = estado.huellitas;
       // Esperar y avanzar
       setTimeout(() => {
         estado.bloqueado = false;
